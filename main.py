@@ -2,7 +2,7 @@ import subprocess
 import time
 from time import sleep
 from flask import Flask
-from threading import Thread
+from threading import Thread, Lock
 import matplotlib.pyplot as plt
 
 def get_shell_command_output(command):
@@ -19,6 +19,7 @@ class TemperatureThread(Thread):
         self.time_stamps = []
         self.temps = []
         self.running = True
+        self.lock = Lock()
 
     @staticmethod
     def get_temp_f() -> float:
@@ -26,9 +27,14 @@ class TemperatureThread(Thread):
 
     def run(self):
         while self.running:
-            self.time_stamps.append(time.time())
-            self.temps.append(TemperatureThread.get_temp_f())
+            with self.lock:
+                self.time_stamps.append(time.time())
+                self.temps.append(TemperatureThread.get_temp_f())
             sleep(self.interval)
+    
+    def get_data(self) -> tuple[list,list]:
+        with self.lock:
+            return list(self.time_stamps), list(self.temps)
 
     def stop(self):
         self.running = False
@@ -39,7 +45,8 @@ temp_thread = TemperatureThread(interval=.1)
 @app.route('/plot')
 def plot():
     # Create a simple plot
-    plt.plot(list(temp_thread.time_stamps), list(temp_thread.temps))
+    x, y = temp_thread.get_data()
+    plt.plot(x, y)
 
     # Add labels and title (optional)
     plt.xlabel("X-axis label")
