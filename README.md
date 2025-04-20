@@ -1,0 +1,1 @@
+Simple example using Flask to render a plot of RPI5 SoC temperature
