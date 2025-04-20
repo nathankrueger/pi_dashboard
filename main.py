@@ -1,9 +1,17 @@
 import subprocess
 import time
+import os
 from time import sleep
 from flask import Flask
 from threading import Thread, Lock
+from gpio_pins import write_pin
+from bme280_sensor import get_bme280_data
 import matplotlib.pyplot as plt
+
+LED_PIN = 21
+
+# Bash forloop to ping wbeserver and spike the SoC temp
+# for i in {1..10000}; do curl 127.0.0.1:5000; done
 
 def get_shell_command_output(command):
     try:
@@ -54,13 +62,22 @@ def plot():
     plt.title("RPi5 SoC Temp Plot")
 
     # Save the plot as a PNG image
+    os.makedirs("static", exist_ok=True)
     plt.savefig("static/scatter_plot.png", dpi=300)
 
     return "<html><img src=/static/scatter_plot.png width=800 height=600></html>"
 
 @app.route('/')
 def hello_world():
-    return f'Current Temp: {TemperatureThread.get_temp_f()}'
+    tempf, pressure, humidity = get_bme280_data(0x77)
+    html = f'<html><h2>Current SoC Temp: {TemperatureThread.get_temp_f()}<h2>'
+    html += f'<br><h3>BME 280: Temp F: {tempf:.2f} Pressure: {pressure:.2f} Humidity {humidity:.2f}</h3></html>'
+    return html
+
+@app.route('/led/<int:val>')
+def show_user_profile(val):
+    write_pin(LED_PIN, val > 0)
+    return f"Pin {LED_PIN} state {val}"
 
 if __name__ == '__main__':
     temp_thread.start()

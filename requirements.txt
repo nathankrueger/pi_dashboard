@@ -1,3 +1,5 @@
 plotly
 flask
 matplotlib
+gpiod
+RPI.BME280
