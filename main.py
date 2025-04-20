@@ -49,9 +49,9 @@ def plot():
     plt.plot(x, y)
 
     # Add labels and title (optional)
-    plt.xlabel("X-axis label")
-    plt.ylabel("Y-axis label")
-    plt.title("Simple Plot")
+    plt.xlabel("Time")
+    plt.ylabel("Temperature (F)")
+    plt.title("RPi5 SoC Temp Plot")
 
     # Save the plot as a PNG image
     plt.savefig("static/scatter_plot.png", dpi=300)
